@@ -104,6 +104,10 @@ UPDATE CovidDeaths
 SET continent = NULL
 WHERE continent = '';
 
+UPDATE CovidDeaths
+SET population = NULL
+WHERE population = '';
+
 
 SELECT *
 FROM PortfolioProject..CovidDeaths
@@ -183,6 +187,8 @@ WHERE new_vaccinations = '';
 
 SELECT * FROM CovidVaccinations;
 
+SELECT * FROM CovidDeaths;
+
 -- CTE
 
 WITH PopvsVac (continent, location, date, population, new_vaccinations, Rolling_Vaccinated) AS
@@ -196,3 +202,58 @@ AND dea.date = vac.date
 WHERE dea.continent IS NOT NULL
 )
 SELECT * FROM PopvsVac
+
+-- Queries For Tableau
+
+-- Table 1
+
+SELECT SUM(CAST(new_cases AS INT)) AS total_cases, SUM(CAST(new_deaths AS INT)) AS total_deaths, SUM(CAST(new_deaths AS INT))/SUM(CAST(new_cases AS INT))*100 AS DeathPercentage
+FROM PortfolioProject..CovidDeaths
+WHERE continent IS NOT NULL 
+ORDER BY 1,2
+
+-- Table 2
+
+SELECT location, SUM(CAST(new_deaths AS INT)) AS TotalDeathCount
+FROM PortfolioProject..CovidDeaths
+WHERE continent IS NULL
+AND location NOT IN ('World', 'European Union', 'International')
+GROUP BY location
+ORDER BY TotalDeathCount DESC
+
+-- Table 3
+
+
+SELECT Location, Population, MAX(total_cases) AS HighestInfectionCount,  
+MAX(total_cases/population)*100 AS PercentPopulationInfected
+FROM PortfolioProject..CovidDeaths
+GROUP BY Location, Population
+ORDER BY PercentPopulationInfected DESC
+
+SELECT location, population,
+MAX(total_cases),0) AS HighestInfectionCount,
+MAX((total_cases/population)) * 100, 0) AS PercentPopulationInfected
+FROM CovidDeaths
+GROUP BY location, population
+ORDER BY PercentPopulationInfected DESC
+
+-- Query didn't work, had to update all ' ' in population to null
+
+UPDATE CovidDeaths
+SET population = NULL
+WHERE population = '';
+
+SELECT location, population,
+MAX(CAST(total_cases AS INT)) AS HighestInfectionCount,
+MAX(total_cases/population) * 100 AS PercentPopulationInfected
+FROM CovidDeaths
+GROUP BY location, population
+ORDER BY PercentPopulationInfected DESC
+
+-- Table 4
+
+SELECT location, population, date, MAX(total_cases) AS HighestInfectionCount,  
+MAX((total_cases/population))*100 AS PercentPopulationInfected
+FROM CovidDeaths
+GROUP BY location, population, date
+ORDER BY PercentPopulationInfected DESC
